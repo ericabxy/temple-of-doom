@@ -3,16 +3,13 @@ function love.load()
     math.randomseed(os.time())
     love.graphics.setDefaultFilter('nearest', 'nearest')
     love.graphics.setFont(love.graphics.newImageFont("share/fonts/alagard_69.png", ' AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz0123456789!@#$%^&'))
-    CHAR = {img = love.graphics.newImage("share/tiles/char0" .. math.random(1, 2) .. ".png"),
-            qua = love.graphics.newQuad(16, 0, 16, 16, 48, 64),
-            x = 100, y = 150, dx = 0, dy = 0, sy = 0}
     LOCATE = 5
     NORTH, EAST, SOUTH, WEST = 1, 2, 3, 4
     LEFTI, TOPI, RIGHTI, BOTTOMI = 38, 48, 266, 184
     LEFTO, TOPO, RIGHTO, BOTTOMO = 24, 40, 296, 216
     INWALL = {LEFTI, TOPI, RIGHTI, BOTTOMI}
     OUTWALL = {LEFTO, TOPO, RIGHTO, BOTTOMO}
-    ITEMMAP = load_level()
+    CHAR, ITEMMAP = load_level()
     ITEMS = get_items(ITEMMAP, LOCATE)
     TILES, BLOCKS, ENEMS = load_room(LOCATE)
     OBJECTS = get_objects({ITEMS, ENEMS, {CHAR}})
@@ -126,15 +123,15 @@ function get_next_locate(locate, direct)
         local locate = (((locate-1)+travel)%#exits)+1
         local x, y = 150, 150
         if math.abs(travel) == 6 then
-            if direct == NORTH then x, y = 150, 75
-            elseif direct == EAST then x, y = 250, 125
-            elseif direct == SOUTH then x, y = 150, 175
-            elseif direct == WEST then x, y = 50, 125 end
+            if direct == NORTH then x, y = 152, 56
+            elseif direct == EAST then x, y = 264, 120
+            elseif direct == SOUTH then x, y = 152, 184
+            elseif direct == WEST then x, y = 40, 120 end
         else
-            if direct == SOUTH then x, y = 150, 75
-            elseif direct == WEST then x, y = 250, 125
-            elseif direct == NORTH then x, y = 150, 175
-            elseif direct == EAST then x, y = 50, 125 end
+            if direct == SOUTH then x, y = 152, 56
+            elseif direct == WEST then x, y = 264, 120
+            elseif direct == NORTH then x, y = 152, 184
+            elseif direct == EAST then x, y = 40, 120 end
         end
         return locate, x, y
     else
@@ -145,8 +142,8 @@ end
 function load_room(locate)
     local tilemaps = { 1, 2, 9, 10,19, 6,  7, 8,15, 16, 5,12,
                       13,14, 9, 10,11,18,  1, 2,15, 16,17, 6}
-    local wallmaps = { 6,14,14, 11,15, 9, 14,15,14, 11,11,11,
-                      14,15,14, 11,15,11,  6,14,14, 11,15, 9}
+    local wallmaps = { 20, 84, 84,  69, 85, 65,  84, 85, 84,  69, 69, 69,
+                       84, 85, 84,  69, 85, 69,  20, 84, 84,  69, 85, 65}
     local enems = {{img = love.graphics.newImage("share/tiles/char06.png"),
                     qua = love.graphics.newQuad(0, 0, 16, 16, 48, 64),
                     x = 75, y = 75, dx = 0, dy = 100, sy = 0},
@@ -165,26 +162,26 @@ function get_blocks(index)
     local walls = {}
     if not index then return walls end  -- invalid arg
     if (math.floor(index/1)%2)==1 then  -- north walls
-        table.insert(walls, {LEFTO, TOPO, 148, 48})
-        table.insert(walls, {156, TOPO, RIGHTO, 48})
+        table.insert(walls, {LEFTO, TOPO, 132, 48})
+        table.insert(walls, {140, TOPO, RIGHTO, 48})
     else
         table.insert(walls, {LEFTO, TOPO, RIGHTO, 48})
     end
-    if (math.floor(index/2)%2)==1 then  -- east walls
-        table.insert(walls, {RIGHTI, TOPO, RIGHTO, 116})
-        table.insert(walls, {RIGHTI, 120, RIGHTO, BOTTOMO})
+    if (math.floor(index/4)%2)==1 then  -- east walls
+        table.insert(walls, {RIGHTI, TOPO, RIGHTO, 100})
+        table.insert(walls, {RIGHTI, 104, RIGHTO, BOTTOMO})
     else
         table.insert(walls, {RIGHTI, TOPO, RIGHTO, BOTTOMO})
     end
-    if (math.floor(index/4)%2)==1 then  -- south walls
-        table.insert(walls, {LEFTO, BOTTOMI, 148, BOTTOMO})
-        table.insert(walls, {156, BOTTOMI, RIGHTO, BOTTOMO})
+    if (math.floor(index/16)%2)==1 then  -- south walls
+        table.insert(walls, {LEFTO, BOTTOMI, 164, BOTTOMO})
+        table.insert(walls, {172, BOTTOMI, RIGHTO, BOTTOMO})
     else
         table.insert(walls, {LEFTO, 178, RIGHTO, BOTTOMO})
     end
-    if (math.floor(index/8)%2)==1 then  -- west walls
-        table.insert(walls, {LEFTO, TOPO, LEFTI, 116})
-        table.insert(walls, {LEFTO, 120, LEFTI, BOTTOMO})
+    if (math.floor(index/64)%2)==1 then  -- west walls
+        table.insert(walls, {LEFTO, TOPO, LEFTI, 132})
+        table.insert(walls, {LEFTO, 136, LEFTI, BOTTOMO})
     else
         table.insert(walls, {LEFTO, TOPO, LEFTI, BOTTOMO})
     end
@@ -204,25 +201,25 @@ end
 
 function get_tiles(index)
     local maps = {
-        {22,23,24,24,24,24,24,24, 6, 7, 8,24,24,24,24,24,24, 4, 5},
-        {12,13,24,24,24,24,24,24, 6, 7, 8,24,24,24,24,24,24, 4, 5},
-        {12,13,24,24,24,24,24,24, 6, 7, 8,24,24,24,24,24,24,25,26},
-        {22,23,24,24,24,24,24,24, 1, 2, 3,24,24,24,24,24,24, 4, 5},
-        {12,13,24,24,24,24,24,24, 1, 2, 3,24,24,24,24,24,24, 4, 5},
-        {12,13,24,24,24,24,24,24, 1, 2, 3,24,24,24,24,24,24,25,26},
-        {17,13,24,24,24,24,24,24, 6, 7, 8,24,24,24,24,24,24, 4, 5},
-        {12,13,24,24,24,24,24,24, 9,14,11,24,24,24,24,24,24, 4, 5},
-        {12,13,24,24,24,24,24,24, 6, 7, 8,24,24,24,24,24,24, 4,15},
-        {17,13,24,24,24,24,24,24, 1, 2, 3,24,24,24,24,24,24, 4, 5},
+        {22,23,24,24,24,24,24,24,24, 6, 7, 8,24,24,24,24,24, 4, 5},
+        {12,13,24,24,24,24,24,24,24, 6, 7, 8,24,24,24,24,24, 4, 5},
+        {12,13,24,24,24,24,24,24,24, 6, 7, 8,24,24,24,24,24,25,26},
+        {22,23,24,24,24,24,24, 1, 2, 3,24,24,24,24,24,24,24, 4, 5},
+        {12,13,24,24,24,24,24, 1, 2, 3,24,24,24,24,24,24,24, 4, 5},
+        {12,13,24,24,24,24,24, 1, 2, 3,24,24,24,24,24,24,24,25,26},
+        {17,13,24,24,24,24,24,24,24, 6, 7, 8,24,24,24,24,24, 4, 5},
+        {12,13,24,24,24,24,24, 1,14,11, 7, 8,24,24,24,24,24, 4, 5},
+        {12,13,24,24,24,24,24,24,24, 6, 7, 8,24,24,24,24,24, 4,15},
+        {17,13,24,24,24,24,24, 1, 2, 3,24,24,24,24,24,24,24, 4, 5},
         {12,13,24,24,24,24,24,24, 9,16,11,24,24,24,24,24,24, 4, 5},
-        {12,13,24,24,24,24,24,24, 1, 2, 3,24,24,24,24,24,24, 4,15},
-        {21,13,24,24,24,24,24,24, 6, 7, 8,24,24,24,24,24,24, 4, 5},
+        {12,13,24,24,24,24,24, 1, 2, 3,24,24,24,24,24,24,24, 4,15},
+        {21,28,24,24,24,24,24,24,24, 6, 7, 8,24,24,24,24,24, 4, 5},
         {12,13,24,24,24,24,24,24, 9,18,11,24,24,24,24,24,24, 4, 5},
-        {12,13,24,24,24,24,24,24, 6, 7, 8,24,24,24,24,24,24, 4,19},
-        {21,13,24,24,24,24,24,24, 1, 2, 3,24,24,24,24,24,24, 4, 5},
+        {12,13,24,24,24,24,24,24,24, 6, 7, 8,24,24,24,24,24,27,19},
+        {21,28,24,24,24,24,24, 1, 2, 3,24,24,24,24,24,24,24, 4, 5},
         {12,13,24,24,24,24,24,24, 9,20,11,24,24,24,24,24,24, 4, 5},
-        {12,13,24,24,24,24,24,24, 1, 2, 3,24,24,24,24,24,24, 4,19},
-        {12,13,24,24,24,24,24,24, 9,10,11,24,24,24,24,24,24, 4, 5}}
+        {12,13,24,24,24,24,24, 1, 2, 3,24,24,24,24,24,24,24,27,19},
+        {12,13,24,24,24,24,24, 1, 2,11, 7, 8,24,24,24,24,24, 4, 5}}
     if not index or index < 1 or index > #maps then return false end
     local image = love.graphics.newImage("share/tiles/tiles00.png")
     local width, quads, tiles = image:getWidth(), {}, {}
@@ -251,21 +248,22 @@ function push_object_out(obj, blks)
 end
 
 function load_level()
-    return {{img = love.graphics.newImage("share/tiles/items00.png"),
-            qua = love.graphics.newQuad(0, 0, 16, 16, 80, 16),
-            x = 125, y = 60, locate = 11},
-           {img = love.graphics.newImage("share/tiles/items00.png"),
-            qua = love.graphics.newQuad(16, 0, 16, 16, 80, 16),
-            x = 175, y = 60, locate = 2},
-           {img = love.graphics.newImage("share/tiles/items00.png"),
-            qua = love.graphics.newQuad(32, 0, 16, 16, 80, 16),
-            x = 125, y = 120, locate = 15},
-           {img = love.graphics.newImage("share/tiles/items00.png"),
-            qua = love.graphics.newQuad(48, 0, 16, 16, 80, 16),
-            x = 175, y = 120, locate = 16},
-           {img = love.graphics.newImage("share/tiles/items00.png"),
-            qua = love.graphics.newQuad(64, 0, 16, 16, 80, 16),
-            x = 150, y = 90, locate = 20}}
+    local char = {
+        img = love.graphics.newImage("share/tiles/char0" .. math.random(1, 2) .. ".png"),
+        qua = love.graphics.newQuad(16, 0, 16, 16, 48, 64),
+        x = 100, y = 150, dx = 0, dy = 0, sy = 0}
+    local image = love.graphics.newImage("share/tiles/items00.png")
+    local items = {{img = image, x = 125, y = 60, locate = 11,
+             qua = love.graphics.newQuad(0, 0, 16, 16, 80, 16)},
+            {img = image, x = 175, y = 60, locate = 2,
+             qua = love.graphics.newQuad(16, 0, 16, 16, 80, 16)},
+            {img = image, x = 125, y = 120, locate = 15,
+             qua = love.graphics.newQuad(32, 0, 16, 16, 80, 16)},
+            {img = image, x = 175, y = 120, locate = 16,
+             qua = love.graphics.newQuad(48, 0, 16, 16, 80, 16)},
+            {img = image, x = 150, y = 90, locate = 20,
+             qua = love.graphics.newQuad(64, 0, 16, 16, 80, 16)}}
+    return char, items
 end
 
 function set_player_controls()
