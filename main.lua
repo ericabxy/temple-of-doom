@@ -1,16 +1,13 @@
 if love == nil then love = lutro end
 function love.load()
     math.randomseed(os.time())
+    love.graphics.setDefaultFilter('nearest', 'nearest')
     love.graphics.setFont(love.graphics.newImageFont("share/fonts/alagard_69.png", ' AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz0123456789!@#$%^&'))
-    LOCATE = 5
     NORTH, EAST, SOUTH, WEST = 1, 2, 3, 4
-    LEFTI, TOPI, RIGHTI, BOTTOMI = 38, 48, 266, 184
-    LEFTO, TOPO, RIGHTO, BOTTOMO = 24, 40, 280, 200
-    INWALL = {LEFTI, TOPI, RIGHTI, BOTTOMI}
-    OUTWALL = {LEFTO, TOPO, RIGHTO, BOTTOMO}
-    CHAR, ITEMMAP = load_level(1)
+    INWALL, OUTWALL = {38, 48, 266, 184}, {24, 40, 280, 200}
+    LEVEL, LOCATE, CHAR, ITEMMAP = load_game(0)
     ITEMS = get_items(ITEMMAP, LOCATE)
-    TILES, WALLS, ENEMS = load_room(LOCATE)
+    TILES, WALLS, ENEMS = load_room(LEVEL, LOCATE)
     OBJECTS = get_objects({ITEMS, ENEMS, {CHAR}})
     TIMER2, TIMER3 = 0, 0
 end
@@ -25,7 +22,7 @@ function love.update(dt)
         local next, x, y = get_next_locate(LOCATE, direct)
         if next ~= LOCATE then
             LOCATE, CHAR.x, CHAR.y = next, x, y
-            TILES, WALLS, ENEMS = load_room(LOCATE)
+            TILES, WALLS, ENEMS = load_room(LEVEL, LOCATE)
             ITEMS = get_items(ITEMMAP, LOCATE)
             OBJECTS = get_objects({ITEMS, ENEMS, {CHAR}})
         else
@@ -36,7 +33,7 @@ function love.update(dt)
     end
     for i,enem in ipairs(ENEMS) do
         move_object(enem, dt)
-        bounce_object_in(enem, {LEFTI, TOPI, RIGHTI, BOTTOMI})
+        bounce_object_in(enem, INWALL)
         enem.qua:setViewport(math.floor(TIMER2/100)*16, 0, 16, 16)
     end
 end
@@ -196,11 +193,15 @@ function get_next_room(locate, direct)
     return locate
 end
 
-function load_room(locate)
-    local tilemaps = { 1, 2, 9, 10,19, 6,  7, 8,15, 16, 5,12,
-                      13,14, 9, 10,11,18,  1, 2,15, 16,17, 6}
-    local wallmaps = { 20, 84, 84,  69, 85, 65,  84, 85, 88, 133, 69, 69,
-                      148, 86, 84,  69, 85, 73,  20, 84, 88, 133,101, 65}
+function load_room(level, locate)
+    local tilemaps00 = {20,21,22}
+    local tilemaps01 = { 1, 2, 9, 10,19, 6,  7, 8,15, 16, 5,12,
+                        13,14, 9, 10,11,18,  1, 2,15, 16,17, 6}
+    local tilemaps = level == 0 and tilemaps00 or tilemaps01
+    local wallmaps00 = { 5, 69, 65}
+    local wallmaps01 = { 20, 84, 84,  69, 85, 65,  84, 85, 88, 133, 69, 69,
+                        148, 86, 84,  69, 85, 73,  20, 84, 88, 133,101, 65}
+    local wallmaps = level == 0 and wallmaps00 or wallmaps01
     local enems = {{img = love.graphics.newImage("share/tiles/char06.png"),
                     qua = love.graphics.newQuad(0, 0, 16, 16, 48, 64),
                     x = 75, y = 75, dx = 0, dy = 100, sy = 0},
@@ -236,7 +237,9 @@ function get_tiles(index)
         {12,13,24,24,24,24,24, 6,20,30, 3,24,24,24,24,24,24, 4, 5},
         {12,13,24,24,24,24,24,24, 1, 2, 3,24,24,24,24,24,24,27,19},
         {12,13,24,24,24,24,24,24, 9,10,11,24,24,24,24,24,24, 4, 5},
-        { 0, 0, 0, 0, 0, 0, 0,24, 1, 2, 3,24, 0, 0, 0, 0, 0, 0, 0}}
+        {22,23,24,24,24,24,24,24, 1, 2, 3,24,24,24,24,24,24, 4, 5},
+        {12,13,24,24,24,24,24,24, 1, 2, 3,24,24,24,24,24,24, 4, 5},
+        {12,13,24,24,24,24,24,24, 1, 2, 3,24,24,24,24,24,24,25,26}}
     if not index or index < 1 or index > #maps then return false end
     local image = love.graphics.newImage("share/tiles/tiles00.png")
     local width, quads, tiles = image:getWidth(), {}, {}
@@ -255,8 +258,8 @@ function get_tiles(index)
 end
 
 function push_object_out(obj, blks)
-    if obj.x < LEFTI or obj.y < TOPI
-    or obj.x > RIGHTI or obj.y > BOTTOMI then
+    if obj.x < INWALL[1] or obj.y < INWALL[2]
+    or obj.x > INWALL[3] or obj.y > INWALL[4] then
         for i,blk in ipairs(blks) do
             local dx, dy = point_get_outside(obj.x, obj.y,
                                              blk[1], blk[2], blk[3], blk[4])
@@ -264,7 +267,8 @@ function push_object_out(obj, blks)
     end end
 end
 
-function load_level(num)
+function load_game(level)
+    local locate = level > 0 and 5 or 1
     local char = {
         img = love.graphics.newImage("share/tiles/char0" .. math.random(1, 2) .. ".png"),
         qua = love.graphics.newQuad(16, 0, 16, 16, 48, 64),
@@ -280,7 +284,7 @@ function load_level(num)
              qua = love.graphics.newQuad(48, 0, 16, 16, 80, 16)},
             {img = image, x = 150, y = 90, locate = 20,
              qua = love.graphics.newQuad(64, 0, 16, 16, 80, 16)}}
-    return char, items
+    return level, locate, char, items
 end
 
 function set_player_controls()
